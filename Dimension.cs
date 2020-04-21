@@ -2,7 +2,7 @@ namespace TickspeedChallenge
 {
     class Dimension
     {
-        static int[] _startCosts = { 2, 3, 5, 13, 10, 14, 19, 25 };
+        static int[] _startCosts = { 2, 3, 5, 7, 10, 14, 19, 25 };
         static int[] _stepCost = { 3, 4, 5, 6, 8, 10, 12, 15 };
 
         public int DimNumber { get; private set; }
@@ -15,6 +15,11 @@ namespace TickspeedChallenge
         public int NextCost
         {
             get { return CurrentCost + StepCost; }
+        }
+
+        public bool IsVisible
+        {
+            get { return DimNumber == 1 || VisibleStepsCount > 0; }
         }
 
         public Dimension(int dimNumber)
@@ -32,7 +37,7 @@ namespace TickspeedChallenge
             StepsCount++;
 
             if(visible)
-                VisibleStepsCount++;
+                VisibleStepsCount++; 
         }
     }
 }

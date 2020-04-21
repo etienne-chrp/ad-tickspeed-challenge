@@ -7,6 +7,7 @@ namespace TickspeedChallenge
     class Program
     {
         static int maxDimensions = 8;
+        static int maxCostInterval = 10;
         static List<Dimension> dimensions = new List<Dimension>();
 
         static void Main(string[] args)
@@ -17,36 +18,39 @@ namespace TickspeedChallenge
             do
             {
                 var existingDims = GetExisitingDimensions().OrderBy(x => x.CurrentCost).ToList();
+                var cheapest = existingDims.First();
 
                 bool found=false;
                 foreach (var dim in existingDims)
                 {
-                    var otherDims = existingDims.ToList();
+                    var otherDims = dimensions.ToList();
                     otherDims.Remove(dim);
                     
-                    if (!dimensions.Exists(x => x.CurrentCost == dim.NextCost) && 
-                        (
-                            !IsUnlocking(dim) ||
-                            (
-                                IsUnlocking(dim) &&
-                                !otherDims.Exists(x => x.CurrentCost == GetNextUnlocked(existingDims)?.CurrentCost)
-                            ) 
-                        )
-                    ) 
+                    if (!otherDims.Exists(x => x.CurrentCost == dim.CurrentCost) &&
+                        dim.CurrentCost - cheapest.CurrentCost < maxCostInterval)
                     {
                         found=true;
+                        Console.WriteLine($"Buy dimension {dim.DimNumber} ! ({dim.CurrentCost})");
                         dim.Step(true);
-                        Console.WriteLine($"Buy dimension {dim.DimNumber} !");
                         break;
                     }
                 }
 
                 if(!found)
                 {
-                    var dim = existingDims.OrderBy(x => x.CurrentCost).First();
-                    dimensions.Where(x => x.CurrentCost == dim.NextCost).ToList().ForEach(x => x.Step(false));
+                    var dim = existingDims
+                        .OrderBy(x => x.CurrentCost)
+                        .ThenByDescending(x => x.DimNumber)
+                        .First();
+                    var conflicts = dimensions
+                        .Where(x => 
+                            x.CurrentCost == dim.CurrentCost && 
+                            x.DimNumber != dim.DimNumber)
+                        .ToList();
+
+                    conflicts.ForEach(x => x.Step(false));
+                    Console.WriteLine($"Buy dimension {dim.DimNumber} ! ({dim.CurrentCost}) [{string.Join(",", conflicts.Select(x => x.DimNumber))}]");
                     dim.Step(true);
-                    Console.WriteLine($"Buy dimension {dim.DimNumber} !");
                 }
             } while (Console.ReadKey(true).Key != ConsoleKey.Escape);
         }
